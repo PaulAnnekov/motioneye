@@ -794,6 +794,17 @@ img.picture-dialog-content {
     border: 1px solid #292929;
 }
 
+video.video-dialog-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+video.video-dialog-content.active {
+    z-index: 0;
+}
+
 img.picture-dialog-progress {
     position: absolute;
     background-color: #313131;

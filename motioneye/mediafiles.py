@@ -34,6 +34,7 @@ import zipfile
 
 from PIL import Image
 from tornado.ioloop import IOLoop
+from mimetypes import MimeTypes
 
 import config
 import settings
@@ -316,6 +317,7 @@ def list_media(camera_config, media_type, callback, prefix=None):
 
     # create a subprocess to retrieve media files
     def do_list_media(pipe):
+        mime = MimeTypes()
         mf = _list_media_files(target_dir, exts=exts, prefix=prefix)
         for (p, st) in mf:
             path = p[len(target_dir):]
@@ -329,6 +331,7 @@ def list_media(camera_config, media_type, callback, prefix=None):
                 'path': path,
                 'momentStr': utils.pretty_date_time(datetime.datetime.fromtimestamp(timestamp)),
                 'momentStrShort': utils.pretty_date_time(datetime.datetime.fromtimestamp(timestamp), short=True),
+                'mime': mime.guess_type(path)[0],
                 'sizeStr': utils.pretty_size(size),
                 'timestamp': timestamp
             })

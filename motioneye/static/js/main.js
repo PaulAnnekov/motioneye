@@ -3413,10 +3413,15 @@ function runLoginDialog(retry) {
 
 function runPictureDialog(entries, pos, mediaType) {
     var content = $('<div class="picture-dialog-content"></div>');
-    
+
+    if (mediaType == 'movie') {
+        var video = $('<video class="video-dialog-content" controls>');
+        content.append(video);
+    }
+
     var img = $('<img class="picture-dialog-content">');
     content.append(img);
-    
+
     var prevArrow = $('<div class="picture-dialog-prev-arrow button mouse-effect" title="previous picture"></div>');
     content.append(prevArrow);
     
@@ -3424,7 +3429,7 @@ function runPictureDialog(entries, pos, mediaType) {
     content.append(nextArrow);
     
     var progressImg = $('<img class="picture-dialog-progress" src="' + staticPath + 'img/modal-progress.gif">');
-    
+
     function updatePicture() {
         var entry = entries[pos];
 
@@ -3442,7 +3447,11 @@ function runPictureDialog(entries, pos, mediaType) {
         updateModalDialogPosition();
         progressImg.css('left', (img.parent().width() - progressImg.width()) / 2);
         progressImg.css('top', (img.parent().height() - progressImg.height()) / 2);
-        
+
+        if (mediaType == 'movie') {
+            video.attr('src', addAuthParams('GET', basePath + mediaType + '/' + entry.cameraId + '/download' + entry.path))
+        }
+
         img.attr('src', addAuthParams('GET', basePath + mediaType + '/' + entry.cameraId + '/preview' + entry.path));
         img.load(function () {
             var aspectRatio = this.naturalWidth / this.naturalHeight;
@@ -3451,9 +3460,11 @@ function runPictureDialog(entries, pos, mediaType) {
             
             if (sizeWidth < sizeHeight) {
                 img.width(width);
+                video.width(width);
             }
             else {
                 img.height(height);
+                video.height(height);
             }
             updateModalDialogPosition();
             prevArrow.css('display', pos < entries.length - 1 ? '' : 'none');
@@ -3500,19 +3511,27 @@ function runPictureDialog(entries, pos, mediaType) {
     $('body').on('keydown', bodyKeyDown);
     
     img.load(updateModalDialogPosition);
-    
+
+    var buttons = [
+        {caption: 'Close'},
+        {caption: 'Download', isDefault: true, click: function () {
+            var entry = entries[pos];
+            downloadFile(mediaType + '/' + entry.cameraId + '/download' + entry.path);
+
+            return false;
+        }}
+    ]
+    if (mediaType == 'movie') {
+        buttons.push({caption: 'Play', click: function () {
+            $(video).addClass('active');
+            return false;
+        }});
+    }
+
     runModalDialog({
         title: ' ',
         closeButton: true,
-        buttons: [
-            {caption: 'Close'},
-            {caption: 'Download', isDefault: true, click: function () {
-                var entry = entries[pos];
-                downloadFile(mediaType + '/' + entry.cameraId + '/download' + entry.path);
-                
-                return false;
-            }}
-        ],
+        buttons: buttons,
         content: content,
         stack: true,
         onShow: updatePicture,
@@ -4122,6 +4141,7 @@ function runMediaDialog(cameraId, mediaType) {
                     if (media) {
                         entry.momentStr = media.momentStr;
                         entry.momentStrShort = media.momentStrShort;
+                        entry.mime = media.mime;
                         entry.sizeStr = media.sizeStr;
                         entry.timestamp = media.timestamp;
                     }
